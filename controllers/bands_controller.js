@@ -1,39 +1,18 @@
 // DEPENDENCIES 
 const bands = require('express').Router()
+const { Op } = require('sequelize')
 const db = require('../models')
 const { Band, MeetGreet, Event, SetTime } = db
-const { Op } = require('sequelize')
+
 
 // FIND ALL BANDS
 bands.get('/', async (req, res) => {
     try {
         const foundBands = await Band.findAll({
-            order: [['available_start_time', 'ASC']],
+            order: [['band_name', 'ASC']],
             where: {
-                name: { [Op.like]: `%${req.query.name ? req.query.name : ''}%` }
-            },
-            //Criteria of what events to pull in
-            include: [
-                {
-                    model: MeetGreet,
-                    as: "meet_greets",
-                    include: {
-                        model: Event,
-                        as: "event",
-                        where: { name: { [Op.like]: `%${req.query.event ? req.query.event : ''}%` } }
-                    }
-
-                },
-                {
-                    model: SetTime,
-                    as: "set_times",
-                    include: {
-                        model: Event,
-                        as: "event",
-                        where: { name: { [Op.like]: `%${req.query.event ? req.query.event : ''}%` } }
-                    }
-                }
-            ]
+                band_name: { [Op.like]: `%${req.query.name ? req.query.name : ''}%` }
+            }
         })
         res.status(200).json(foundBands)
     } catch (error) {
@@ -90,11 +69,11 @@ bands.post('/', async (req, res) => {
 })
 
 // UPDATE A BAND
-bands.put('/:id', async (req, res) => {
+bands.put('/:name', async (req, res) => {
     try {
         const updatedBands = await Band.update(req.body, {
             where: {
-                band_id: req.params.id
+                band_id: req.params.name
             }
         })
         res.status(200).json({
@@ -106,11 +85,11 @@ bands.put('/:id', async (req, res) => {
 })
 
 // DELETE A BAND
-bands.delete('/:id', async (req, res) => {
+bands.delete('/:name', async (req, res) => {
     try {
         const deletedBands = await Band.destroy({
             where: {
-                band_id: req.params.id
+                band_id: req.params.name
             }
         })
         res.status(200).json({
